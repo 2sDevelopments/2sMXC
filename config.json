@@ -1,0 +1,37 @@
+{
+  "agentName": "2sMXC",
+  "playit": {
+    "ip": "playit.example.com",
+    "basePort": 10000
+  },
+  "servers": [
+    {
+      "type": "java",
+      "enabled": true,
+      "localHost": "127.0.0.1",
+      "localPort": 25565
+    },
+    {
+      "type": "bedrock",
+      "enabled": true,
+      "localHost": "127.0.0.1",
+      "localPort": 19132
+    },
+    {
+      "type": "eaglercraft",
+      "enabled": true,
+      "localHost": "127.0.0.1",
+      "localPort": 25580,
+      "useWSS": true,
+      "tls": false
+    }
+  ],
+  "network": {
+    "heartbeatInterval": 5000,
+    "reconnectDelay": 3000
+  },
+  "logging": {
+    "console": true,
+    "file": true
+  }
+}
