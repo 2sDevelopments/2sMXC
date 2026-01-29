@@ -6,324 +6,284 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body{
-  margin:0;
-  font-family:monospace;
-  background:#1b1b1b;
-  color:#eee;
-}
-
-header{
-  background:#0f0f0f;
-  border-bottom:2px solid #0f0;
-  padding:10px;
-}
-
-nav a{
-  color:#0f0;
-  margin-right:20px;
-  cursor:pointer;
-  text-decoration:none;
-}
-
-nav a.active{
-  text-decoration:underline;
-}
-
-section{
-  display:none;
-  padding:15px;
-}
-
-section.active{
-  display:block;
-}
-
-h1,h2{
-  color:#0f0;
-}
-
-table{
-  width:100%;
-  border-collapse:collapse;
-  margin-top:10px;
-}
-
-th,td{
-  border:1px solid #0f0;
-  padding:6px;
-  text-align:center;
-}
-
-input,button,select{
-  background:#111;
-  color:#0f0;
-  border:1px solid #0f0;
-  padding:5px;
-  margin:2px;
-}
-
-button:hover{
-  background:#0f0;
-  color:#000;
-}
-
-.box{
-  border:1px solid #0f0;
-  padding:10px;
-  margin-bottom:15px;
-}
-
-.status-online{color:#0f0}
-.status-offline{color:#f00}
+body{margin:0;font-family:monospace;background:#1b1b1b;color:#eee}
+header{background:#0c0c0c;border-bottom:2px solid #00ff00;padding:10px}
+nav a{color:#00ff00;margin-right:15px;cursor:pointer;text-decoration:none}
+nav a.active{text-decoration:underline}
+section{display:none;padding:15px}
+section.active{display:block}
+h1,h2{color:#00ff00}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{border:1px solid #00ff00;padding:6px;text-align:center}
+input,button,select,textarea{background:#111;color:#00ff00;border:1px solid #00ff00;padding:5px;margin:3px}
+button:hover{background:#00ff00;color:#000}
+.box{border:1px solid #00ff00;padding:10px;margin-bottom:10px}
+.ok{color:#00ff00}
+.warn{color:#ffff00}
+.bad{color:#ff4444}
+footer{text-align:center;padding:10px;opacity:.6}
 </style>
 </head>
 <body>
 
 <header>
 <nav>
-  <a onclick="showTab('dashboard')" id="tab-dashboard" class="active">Dashboard</a>
-  <a onclick="showTab('tunnels')" id="tab-tunnels">Tunnels</a>
-  <a onclick="showTab('ips')" id="tab-ips">IP Manager</a>
-  <a onclick="showTab('domains')" id="tab-domains">Domains</a>
-  <a onclick="showTab('settings')" id="tab-settings">Settings</a>
-  <a onclick="showTab('logs')" id="tab-logs">Logs</a>
+<a id="tab-dashboard" class="active" onclick="showTab('dashboard')">Dashboard</a>
+<a id="tab-tunnels" onclick="showTab('tunnels')">Tunnels</a>
+<a id="tab-ips" onclick="showTab('ips')">IP Manager</a>
+<a id="tab-domains" onclick="showTab('domains')">Domains</a>
+<a id="tab-settings" onclick="showTab('settings')">Settings</a>
+<a id="tab-logs" onclick="showTab('logs')">Logs</a>
 </nav>
 </header>
 
-<!-- DASHBOARD -->
 <section id="dashboard" class="active">
 <h1>2sMXC Agent Dashboard</h1>
 
 <div class="box">
-<p><b>Agent Name:</b> <span id="agentName">2sMXC</span></p>
-<p><b>Status:</b> <span id="agentStatus" class="status-offline">Offline</span></p>
-<p><b>Active IP:</b> <span id="activeIP">-</span></p>
+<p>Agent Name: <b id="agentName">2sMXC</b></p>
+<p>Status: <b id="agentStatus" class="bad">Offline</b></p>
+<p>Resolved IP: <b id="resolvedIP">-</b></p>
 </div>
 
 <div class="box">
-<h2>Quick Stats</h2>
+<h2>Statistics</h2>
 <p>Total Tunnels: <span id="statTunnels">0</span></p>
 <p>Total IPs: <span id="statIPs">0</span></p>
+<p>No-IP Domains: <span id="statNoIP">0</span></p>
 </div>
 </section>
 
-<!-- TUNNELS -->
 <section id="tunnels">
-<h1>Tunnels</h1>
+<h1>Tunnel Manager</h1>
 
 <div class="box">
 <h2>Add Tunnel</h2>
 <input id="tunType" placeholder="type (java/bedrock/eagler)">
 <input id="tunPort" placeholder="public port">
 <input id="tunLocal" placeholder="local port">
-<button onclick="addTunnel()">Add</button>
+<button onclick="addTunnel()">Add Tunnel</button>
 </div>
 
 <table>
-<thead>
-<tr><th>Type</th><th>Public Port</th><th>Local Port</th><th>Action</th></tr>
-</thead>
+<thead><tr><th>Type</th><th>Public Port</th><th>Local Port</th><th>Action</th></tr></thead>
 <tbody id="tunnelTable"></tbody>
 </table>
 </section>
 
-<!-- IP MANAGER -->
 <section id="ips">
 <h1>IP Manager</h1>
 
 <div class="box">
-<h2>Add Public IP</h2>
-<input id="newIP" placeholder="example.ddns.net">
+<input id="newIP" placeholder="example.ddns.net or IP">
 <button onclick="addIP()">Add IP</button>
 </div>
 
+<div id="noipWarning"></div>
+
 <table>
 <thead>
-<tr><th>IP / Domain</th><th>Active</th><th>Action</th></tr>
+<tr><th>IP / Domain</th><th>Active</th><th>No-IP Status</th><th>Actions</th></tr>
 </thead>
 <tbody id="ipTable"></tbody>
 </table>
 </section>
 
-<!-- DOMAINS -->
 <section id="domains">
-<h1>Domains</h1>
-<p>No-IP & DuckDNS monitoring placeholder</p>
-
+<h1>Domains Overview</h1>
 <table>
-<thead>
-<tr><th>Domain</th><th>Status</th><th>Days Left</th></tr>
-</thead>
+<thead><tr><th>Domain</th><th>Status</th><th>Days Left</th></tr></thead>
 <tbody id="domainTable"></tbody>
 </table>
 </section>
 
-<!-- SETTINGS -->
 <section id="settings">
 <h1>Settings</h1>
 
 <div class="box">
 <h2>Agent</h2>
-<input id="setAgentName" placeholder="Agent Name">
-<button onclick="saveSettings()">Save</button>
+<input id="setAgentName" placeholder="Agent name">
 </div>
 
 <div class="box">
 <h2>Network</h2>
-<label>Heartbeat (ms)</label><br>
-<input id="setHeartbeat" value="5000"><br>
-<label>Reconnect Delay (ms)</label><br>
-<input id="setReconnect" value="3000">
+Heartbeat <input id="setHeartbeat" value="5000">
+Reconnect <input id="setReconnect" value="3000">
 </div>
 
 <div class="box">
 <h2>Playit</h2>
-<input id="setPlayitIP" placeholder="playit.example.com">
-<input id="setPlayitPort" placeholder="Base Port">
+Host <input id="setPlayitHost">
+Base Port <input id="setPlayitPort">
 </div>
+
+<button onclick="saveSettings()">Save Settings</button>
 </section>
 
-<!-- LOGS -->
 <section id="logs">
-<h1>Logs</h1>
-<textarea id="logBox" rows="15" style="width:100%;background:#000;color:#0f0"></textarea>
+<h1>System Logs</h1>
+<textarea id="logBox" rows="18" style="width:100%"></textarea>
 </section>
+
+<footer>2sMXC Control Panel</footer>
 
 <script>
-let state = {
-  agentName: "2sMXC",
-  ips: [],
-  activeIP: "",
-  tunnels: [],
-  settings: {
-    heartbeat:5000,
-    reconnect:3000,
-    playitIP:"",
-    playitPort:""
-  }
+let state={
+ agentName:"2sMXC",
+ resolvedIP:"",
+ ips:[],
+ tunnels:[],
+ settings:{heartbeat:5000,reconnect:3000,playitHost:"",playitPort:""}
 };
 
-function saveState(){
-  localStorage.setItem("mxState",JSON.stringify(state));
+function log(m){
+ let b=document.getElementById("logBox");
+ b.value+=new Date().toLocaleTimeString()+" - "+m+"\n";
+ b.scrollTop=b.scrollHeight;
 }
 
-function loadState(){
-  const s = localStorage.getItem("mxState");
-  if(s){
-    state = JSON.parse(s);
-  }
+function save(){localStorage.setItem("mxState",JSON.stringify(state))}
+function load(){
+ let s=localStorage.getItem("mxState");
+ if(s)state=JSON.parse(s);
 }
 
 function showTab(id){
-  document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
-
-  document.querySelectorAll("nav a").forEach(a=>a.classList.remove("active"));
-  document.getElementById("tab-"+id).classList.add("active");
+ document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));
+ document.getElementById(id).classList.add("active");
+ document.querySelectorAll("nav a").forEach(a=>a.classList.remove("active"));
+ document.getElementById("tab-"+id).classList.add("active");
 }
 
-function render(){
-  document.getElementById("agentName").textContent = state.agentName;
-  document.getElementById("activeIP").textContent = state.activeIP || "-";
-  document.getElementById("statTunnels").textContent = state.tunnels.length;
-  document.getElementById("statIPs").textContent = state.ips.length;
+function isNoIP(d){
+ return d.endsWith(".ddns.net")||d.endsWith(".no-ip.org")||d.endsWith(".hopto.org")||d.endsWith(".zapto.org");
+}
 
-  // IP table
-  const ipTable = document.getElementById("ipTable");
-  ipTable.innerHTML="";
-  state.ips.forEach((ip,i)=>{
-    ipTable.innerHTML += `
-      <tr>
-        <td>${ip}</td>
-        <td>${state.activeIP===ip?"YES":"NO"}</td>
-        <td>
-          <button onclick="setActiveIP(${i})">Use</button>
-          <button onclick="removeIP(${i})">Delete</button>
-        </td>
-      </tr>
-    `;
-  });
+function getNoIPData(d){
+ let db=JSON.parse(localStorage.getItem("noip")||"{}");
+ if(!db[d]){db[d]=Date.now()+30*86400000;localStorage.setItem("noip",JSON.stringify(db));}
+ let days=Math.floor((db[d]-Date.now())/86400000);
+ if(days<=0)return{status:"EXPIRED",days};
+ if(days<=3)return{status:"EXPIRING",days};
+ return{status:"OK",days};
+}
 
-  // tunnels
-  const tt = document.getElementById("tunnelTable");
-  tt.innerHTML="";
-  state.tunnels.forEach((t,i)=>{
-    tt.innerHTML+=`
-      <tr>
-        <td>${t.type}</td>
-        <td>${t.port}</td>
-        <td>${t.local}</td>
-        <td><button onclick="removeTunnel(${i})">Delete</button></td>
-      </tr>
-    `;
-  });
+function reconfirm(d){
+ let db=JSON.parse(localStorage.getItem("noip")||"{}");
+ db[d]=Date.now()+30*86400000;
+ localStorage.setItem("noip",JSON.stringify(db));
+ window.open("https://www.noip.com/members/dns/","_blank");
+ render();
 }
 
 function addIP(){
-  const ip = document.getElementById("newIP").value.trim();
-  if(!ip)return;
-  state.ips.push(ip);
-  if(!state.activeIP) state.activeIP = ip;
-  saveState();
-  render();
+ let v=document.getElementById("newIP").value.trim();
+ if(!v)return;
+ state.ips.push(v);
+ if(!state.activeIP)state.activeIP=v;
+ save();render();
 }
 
 function removeIP(i){
-  if(state.ips[i]===state.activeIP) state.activeIP="";
-  state.ips.splice(i,1);
-  saveState();
-  render();
+ if(state.ips[i]==state.activeIP)state.activeIP="";
+ state.ips.splice(i,1);
+ save();render();
 }
 
 function setActiveIP(i){
-  state.activeIP = state.ips[i];
-  saveState();
-  render();
+ state.activeIP=state.ips[i];
+ save();render();
 }
 
 function addTunnel(){
-  const type=document.getElementById("tunType").value;
-  const port=document.getElementById("tunPort").value;
-  const local=document.getElementById("tunLocal").value;
-  if(!type||!port||!local)return;
-  state.tunnels.push({type,port,local});
-  saveState();
-  render();
+ let t=document.getElementById("tunType").value;
+ let p=document.getElementById("tunPort").value;
+ let l=document.getElementById("tunLocal").value;
+ if(!t||!p||!l)return;
+ state.tunnels.push({type:t,port:p,local:l});
+ save();render();
 }
 
 function removeTunnel(i){
-  state.tunnels.splice(i,1);
-  saveState();
-  render();
+ state.tunnels.splice(i,1);
+ save();render();
 }
 
 function saveSettings(){
-  state.agentName=document.getElementById("setAgentName").value||state.agentName;
-  state.settings.heartbeat=document.getElementById("setHeartbeat").value;
-  state.settings.reconnect=document.getElementById("setReconnect").value;
-  state.settings.playitIP=document.getElementById("setPlayitIP").value;
-  state.settings.playitPort=document.getElementById("setPlayitPort").value;
-  saveState();
-  render();
-  log("Settings saved");
+ state.agentName=document.getElementById("setAgentName").value||state.agentName;
+ state.settings.heartbeat=document.getElementById("setHeartbeat").value;
+ state.settings.reconnect=document.getElementById("setReconnect").value;
+ state.settings.playitHost=document.getElementById("setPlayitHost").value;
+ state.settings.playitPort=document.getElementById("setPlayitPort").value;
+ save();
+ log("Settings updated");
+ render();
 }
 
-function log(msg){
-  const box=document.getElementById("logBox");
-  box.value+=new Date().toLocaleTimeString()+" - "+msg+"\n";
-  box.scrollTop=box.scrollHeight;
+function render(){
+ document.getElementById("agentName").textContent=state.agentName;
+ document.getElementById("resolvedIP").textContent=state.activeIP||"-";
+ document.getElementById("statTunnels").textContent=state.tunnels.length;
+ document.getElementById("statIPs").textContent=state.ips.length;
+
+ let noipCount=0;
+ let warn="";
+ let ipT=document.getElementById("ipTable");
+ ipT.innerHTML="";
+ state.ips.forEach((ip,i)=>{
+   let status="Custom";
+   let color="ok";
+   let action="";
+   if(isNoIP(ip)){
+     let s=getNoIPData(ip);
+     status=s.status+" ("+s.days+"d)";
+     if(s.status=="EXPIRING")color="warn";
+     if(s.status=="EXPIRED")color="bad";
+     noipCount++;
+     if(s.status!="OK")warn+="⚠ "+ip+" "+s.status+"<br>";
+     action=`<button onclick="reconfirm('${ip}')">Reconfirm</button>`;
+   }
+   ipT.innerHTML+=`<tr>
+   <td>${ip}</td>
+   <td>${state.activeIP==ip?"YES":"NO"}</td>
+   <td class="${color}">${status}</td>
+   <td>
+   <button onclick="setActiveIP(${i})">Use</button>
+   <button onclick="removeIP(${i})">Delete</button>
+   ${action}
+   </td></tr>`;
+ });
+
+ document.getElementById("statNoIP").textContent=noipCount;
+ document.getElementById("noipWarning").innerHTML=warn;
+
+ let tt=document.getElementById("tunnelTable");
+ tt.innerHTML="";
+ state.tunnels.forEach((t,i)=>{
+  tt.innerHTML+=`<tr><td>${t.type}</td><td>${t.port}</td><td>${t.local}</td><td><button onclick="removeTunnel(${i})">Delete</button></td></tr>`;
+ });
+
+ document.getElementById("agentStatus").textContent="Online";
+ document.getElementById("agentStatus").className="ok";
 }
 
-function fakeAgent(){
-  document.getElementById("agentStatus").textContent="Online";
-  document.getElementById("agentStatus").className="status-online";
-  log("Agent connected (demo mode)");
+function connectWS(){
+ try{
+  let ws=new WebSocket("ws://localhost:3001");
+  ws.onmessage=e=>{
+    let d=JSON.parse(e.data);
+    if(d.agentName)state.agentName=d.agentName;
+    if(d.resolvedIP)state.activeIP=d.resolvedIP;
+    if(d.tunnels)state.tunnels=d.tunnels;
+    render();
+  };
+ }catch{}
 }
 
-loadState();
+load();
 render();
-fakeAgent();
+connectWS();
+log("Dashboard loaded");
 </script>
 
 </body>
