@@ -2,41 +2,214 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>2sMXC Dashboard</title>
+<title>2sMXC Agent Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
-body { font-family: monospace; background:#222; color:#eee; }
-h1 { color:#0f0; text-align:center; }
-table { border-collapse: collapse; width: 80%; margin: 20px auto; }
-td, th { border: 1px solid #0f0; padding: 8px; text-align:center; }
+:root {
+  --bg: #0e1117;
+  --card: #161b22;
+  --border: #30363d;
+  --text: #e6edf3;
+  --green: #3fb950;
+  --yellow: #d29922;
+  --red: #f85149;
+  --blue: #58a6ff;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, monospace;
+  background: var(--bg);
+  color: var(--text);
+}
+
+header {
+  padding: 20px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+}
+
+header h1 {
+  margin: 0;
+  color: var(--blue);
+}
+
+.container {
+  max-width: 1100px;
+  margin: 20px auto;
+  padding: 0 15px;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 15px;
+}
+
+.card h3 {
+  margin: 0 0 10px;
+  color: var(--blue);
+  font-size: 14px;
+  text-transform: uppercase;
+}
+
+.card p {
+  margin: 0;
+  font-size: 16px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+th, td {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+}
+
+th {
+  color: var(--blue);
+  font-weight: 600;
+}
+
+.status {
+  font-weight: bold;
+}
+
+.status.connected { color: var(--green); }
+.status.reconnecting { color: var(--yellow); }
+.status.error { color: var(--red); }
+
+.footer {
+  text-align: center;
+  margin-top: 30px;
+  opacity: 0.6;
+  font-size: 13px;
+}
+
+.offline {
+  color: var(--yellow);
+  text-align: center;
+  margin-top: 10px;
+}
 </style>
 </head>
 <body>
-<h1>2sMXC Agent Dashboard</h1>
-<p id="agent"></p>
-<p id="ip"></p>
-<table>
-<thead>
-<tr>
-<th>Type</th><th>Port</th><th>Local</th><th>Status</th>
-</tr>
-</thead>
-<tbody id="tunnels"></tbody>
-</table>
+
+<header>
+  <h1>2sMXC Agent Dashboard</h1>
+</header>
+
+<div class="container">
+
+  <div class="info-grid">
+    <div class="card">
+      <h3>Agent Name</h3>
+      <p id="agent">Loading...</p>
+    </div>
+
+    <div class="card">
+      <h3>Resolved IP</h3>
+      <p id="ip">Loading...</p>
+    </div>
+
+    <div class="card">
+      <h3>Status</h3>
+      <p id="agentStatus">Connecting...</p>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Public Port</th>
+        <th>Local Target</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="tunnels"></tbody>
+  </table>
+
+  <div id="offline" class="offline" style="display:none;">
+    Agent is offline (static preview mode)
+  </div>
+
+  <div class="footer">
+    2sMXC • Live Tunnel Monitor
+  </div>
+
+</div>
 
 <script>
-const ws = new WebSocket("ws://localhost:3001");
-ws.onmessage = e => {
-    const data = JSON.parse(e.data);
-    document.getElementById("agent").textContent = "Agent: " + data.agentName;
-    document.getElementById("ip").textContent = "Resolved IP: " + data.resolvedIP;
-    const tbody = document.getElementById("tunnels");
-    tbody.innerHTML = "";
-    data.tunnels.forEach(t => {
+let connected = false;
+
+function connectWS() {
+  try {
+    const ws = new WebSocket("ws://localhost:3001");
+
+    ws.onopen = () => {
+      connected = true;
+      document.getElementById("agentStatus").textContent = "Online";
+      document.getElementById("offline").style.display = "none";
+    };
+
+    ws.onmessage = e => {
+      const data = JSON.parse(e.data);
+
+      document.getElementById("agent").textContent = data.agentName || "-";
+      document.getElementById("ip").textContent = data.resolvedIP || "-";
+
+      const tbody = document.getElementById("tunnels");
+      tbody.innerHTML = "";
+
+      (data.tunnels || []).forEach(t => {
+        const statusClass = (t.status || "").toLowerCase();
+
         const row = document.createElement("tr");
-        row.innerHTML = `<td>${t.type}</td><td>${t.port}</td><td>${t.localHost}:${t.localPort}</td><td>${t.status}</td>`;
+        row.innerHTML = `
+          <td>${t.type}</td>
+          <td>${t.port}</td>
+          <td>${t.localHost}:${t.localPort}</td>
+          <td class="status ${statusClass}">${t.status}</td>
+        `;
         tbody.appendChild(row);
-    });
-};
+      });
+    };
+
+    ws.onclose = () => showOffline();
+    ws.onerror = () => showOffline();
+
+  } catch {
+    showOffline();
+  }
+}
+
+function showOffline() {
+  if (connected) return;
+  document.getElementById("agentStatus").textContent = "Offline";
+  document.getElementById("offline").style.display = "block";
+}
+
+connectWS();
 </script>
+
 </body>
 </html>
